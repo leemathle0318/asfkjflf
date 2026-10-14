@@ -109,7 +109,7 @@ jobs:
               'core/FFmpegAudioTimeline.hpp', 'core/CaptureClockedAudio.hpp', 'core/PreparedCapturePCM.hpp',
               'core/CaptureOutputWorker.hpp', 'core/CommonPresentationClock.hpp', 'core/HostPCMRead.hpp', 'scripts/run_new_audio_tests.sh',
               'tests/capture_clock_tests.cpp', 'tests/capture_wire_tests.cpp', 'tests/common_clock_tests.cpp',
-              'tests/ffmpeg_timeline_tests.cpp', 'tests/prepared_capture_tests.cpp', 'tests/full_audio_pipeline_tests.cpp',
+              'tests/ffmpeg_timeline_tests.cpp', 'tests/prepared_capture_tests.cpp', 'tests/full_audio_pipeline_tests.cpp', 'tests/test_host_build.py',
               'AppAudio.mm', 'OBSBridgeLive.plist', 'LiveAudioStatus.h', 'LiveAudioStatus.mm',
               'core/LiveAudio.hpp', 'core/AudioContinuity.hpp', 'core/AudioReadClock.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
               'tests/live_audio_tests.cpp', 'tests/audio_continuity_tests.cpp', 'tests/audio_read_clock_tests.cpp', 'tests/video_budget_tests.cpp',
@@ -214,6 +214,7 @@ jobs:
           python3 tests/check_project.py
           python3 -m unittest discover -s tests -p test_deb_checker.py -v
           python3 -m unittest discover -s tests -p test_packaging.py -v
+          python3 -m unittest discover -s tests -p test_host_build.py -v
       - name: CoreMedia audio sample tests
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: |
@@ -297,4 +298,5 @@ jobs:
             ${{ steps.layout.outputs.source_dir }}/work/coremedia-audio-*.log
             ${{ steps.layout.outputs.source_dir }}/work/*-test.log
             ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/ffbuild/config.log
+            ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/compiler-smoke.log
           if-no-files-found: ignore
