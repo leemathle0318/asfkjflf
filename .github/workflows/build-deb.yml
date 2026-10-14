@@ -106,8 +106,8 @@ jobs:
           required = [
               'Makefile', 'control', 'OBSBridge.plist', 'SystemHooks.mm',
               'AppAudio.mm', 'OBSBridgeLive.plist', 'LiveAudioStatus.h', 'LiveAudioStatus.mm',
-              'core/LiveAudio.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
-              'tests/live_audio_tests.cpp', 'tests/video_budget_tests.cpp',
+              'core/LiveAudio.hpp', 'core/AudioContinuity.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
+              'tests/live_audio_tests.cpp', 'tests/audio_continuity_tests.cpp', 'tests/video_budget_tests.cpp',
               'layout/Library/libSandy/local.xiaoguai.obsbridge.live-read.plist',
               'Receiver.mm', 'Receiver.h', 'Shared.h',
               'core/RtmpPull.hpp', 'core/VideoTransform.hpp', 'tests/video_transform_tests.cpp',
@@ -117,7 +117,7 @@ jobs:
               'Producer.mm', 'Consumer.mm', 'MediaBus.h', 'MediaBus.mm',
               'core/SharedMedia.hpp', 'tests/shared_media_tests.cpp',
           'core/NonblockingRead.hpp', 'core/MappingStatus.hpp', 'tests/nonblocking_read_tests.cpp',
-          'core/MappedMedia.hpp', 'core/PendingFrames.hpp', 'tests/mapped_media_tests.cpp', 'tests/pending_frames_tests.cpp',
+          'core/MappedMedia.hpp', 'core/PendingFrames.hpp', 'core/PresentationClock.hpp', 'tests/mapped_media_tests.cpp', 'tests/pending_frames_tests.cpp',
           'SandboxAccess.mm', 'SandboxAccess.h', 'core/AccessAttempt.hpp', 'tests/access_attempt_tests.cpp',
           'layout/Library/libSandy/local.xiaoguai.obsbridge.media-read.plist',
               'core/VideoContinuity.hpp', 'tests/video_continuity_tests.cpp',
@@ -195,6 +195,9 @@ jobs:
             tests/live_audio_tests.cpp -o work/live_audio_tests
           work/live_audio_tests
           xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
+            tests/audio_continuity_tests.cpp -o work/audio_continuity_tests
+          work/audio_continuity_tests
+          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
             tests/video_budget_tests.cpp -o work/video_budget_tests
           work/video_budget_tests
           xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
@@ -245,6 +248,7 @@ jobs:
             TARGET=iphone:clang:16.5:15.0
           test -n "$(find packages -name '*.deb' -print -quit)"
           python3 tests/check_deb.py packages/*.deb
+          python3 scripts/name_package.py packages
           {
             echo "Theos: $THEOS_COMMIT"
             echo "SDKs: $SDKS_COMMIT; iPhoneOS16.5 SDK, deployment 15.0"
@@ -263,7 +267,7 @@ jobs:
           cp THIRD_PARTY.md vendor/ffmpeg/share/licenses/* packages/
       - uses: actions/upload-artifact@v4
         with:
-          name: OBSBridge-rootless-deb
+          name: tk推流助手-rootless-deb
           path: ${{ steps.layout.outputs.source_dir }}/packages/*.deb
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
