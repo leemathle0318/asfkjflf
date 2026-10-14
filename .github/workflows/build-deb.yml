@@ -299,4 +299,5 @@ jobs:
             ${{ steps.layout.outputs.source_dir }}/work/*-test.log
             ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/ffbuild/config.log
             ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/compiler-smoke.log
+            ${{ steps.layout.outputs.source_dir }}/packages/*.deb
           if-no-files-found: ignore
