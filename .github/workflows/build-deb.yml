@@ -105,9 +105,14 @@ jobs:
           source = candidates[0]
           required = [
               'Makefile', 'control', 'OBSBridge.plist', 'SystemHooks.mm',
+              'CaptureClockIPC.h', 'CaptureClockIPC.mm', 'core/CaptureClockFeedback.hpp', 'core/CaptureClockWire.hpp', 'core/CaptureClockMailbox.hpp',
+              'core/FFmpegAudioTimeline.hpp', 'core/CaptureClockedAudio.hpp', 'core/PreparedCapturePCM.hpp',
+              'core/CaptureOutputWorker.hpp', 'core/CommonPresentationClock.hpp', 'core/HostPCMRead.hpp', 'scripts/run_new_audio_tests.sh',
+              'tests/capture_clock_tests.cpp', 'tests/capture_wire_tests.cpp', 'tests/common_clock_tests.cpp',
+              'tests/ffmpeg_timeline_tests.cpp', 'tests/prepared_capture_tests.cpp', 'tests/full_audio_pipeline_tests.cpp',
               'AppAudio.mm', 'OBSBridgeLive.plist', 'LiveAudioStatus.h', 'LiveAudioStatus.mm',
-              'core/LiveAudio.hpp', 'core/AudioContinuity.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
-              'tests/live_audio_tests.cpp', 'tests/audio_continuity_tests.cpp', 'tests/video_budget_tests.cpp',
+              'core/LiveAudio.hpp', 'core/AudioContinuity.hpp', 'core/AudioReadClock.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
+              'tests/live_audio_tests.cpp', 'tests/audio_continuity_tests.cpp', 'tests/audio_read_clock_tests.cpp', 'tests/video_budget_tests.cpp',
               'layout/Library/libSandy/local.xiaoguai.obsbridge.live-read.plist',
               'Receiver.mm', 'Receiver.h', 'Shared.h',
               'core/RtmpPull.hpp', 'core/VideoTransform.hpp', 'tests/video_transform_tests.cpp',
@@ -198,6 +203,9 @@ jobs:
             tests/audio_continuity_tests.cpp -o work/audio_continuity_tests
           work/audio_continuity_tests
           xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
+            tests/audio_read_clock_tests.cpp -o work/audio_read_clock_tests
+          work/audio_read_clock_tests
+          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
             tests/video_budget_tests.cpp -o work/video_budget_tests
           work/video_budget_tests
           xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
@@ -241,6 +249,9 @@ jobs:
       - name: Build FFmpeg decoding libraries
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: bash scripts/build_ffmpeg.sh
+      - name: Pinned FFmpeg 7.1.5 new audio pipeline tests
+        working-directory: ${{ steps.layout.outputs.source_dir }}
+        run: bash scripts/run_new_audio_tests.sh
       - name: Compile rootless package
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: |
@@ -284,4 +295,6 @@ jobs:
             ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-build-*/ffbuild/config.log
             ${{ steps.layout.outputs.source_dir }}/.theos/obj/
             ${{ steps.layout.outputs.source_dir }}/work/coremedia-audio-*.log
+            ${{ steps.layout.outputs.source_dir }}/work/*-test.log
+            ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/ffbuild/config.log
           if-no-files-found: ignore
