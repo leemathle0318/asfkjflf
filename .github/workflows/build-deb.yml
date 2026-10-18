@@ -1,4 +1,4 @@
-name: Build rootless OBS camera deb
+name: Build TCP-only tk streaming assistant
 on:
   workflow_dispatch:
   push:
@@ -48,7 +48,7 @@ jobs:
                               control_name = str(PurePosixPath(name).parent / 'control')
                               if control_name in names and package.getinfo(control_name).file_size <= 65536:
                                   control = package.read(control_name).decode('utf-8', 'replace')
-                                  if any(line.strip() == 'Version: 0.3.0' for line in control.splitlines()):
+                                  if any(line.strip() == 'Version: 0.4.0' for line in control.splitlines()):
                                       source_archives.append(path)
                                   else:
                                       old_source_archives.append(path)
@@ -60,14 +60,14 @@ jobs:
           if old_source_archives:
               print('Skipping old/unversioned source ZIPs:', [str(path.relative_to(root)) for path in old_source_archives])
           if not source_archives and old_source_archives:
-              print('::error::This workflow requires OBSBridge 0.3.0 read-only-consumer media source. Upload the new source ZIP; older ZIPs do not have the latest transport and diagnostic changes.')
+              print('::error::This workflow requires OBSBridge 0.4.0 read-only-consumer media source. Upload the new source ZIP; older ZIPs do not have the latest transport and diagnostic changes.')
               raise SystemExit(1)
-          preferred = root / 'OBSBridge-source-0.3.0.zip'
+          preferred = root / 'tk-stream-assistant-tcp-source-0.4.0.zip'
           archive = preferred if preferred in source_archives else None
           if archive is None and len(source_archives) == 1:
               archive = source_archives[0]
           if archive is None and len(source_archives) > 1:
-              print('::error::Multiple 0.3.0 source ZIPs found. Keep one, or name the desired one OBSBridge-source-0.3.0.zip at repository root.')
+              print('::error::Multiple 0.4.0 source ZIPs found. Keep one, or name the desired one tk-stream-assistant-tcp-source-0.4.0.zip at repository root.')
               print('Source ZIPs:', [str(path.relative_to(root)) for path in source_archives])
               raise SystemExit(1)
           if archive is not None:
@@ -105,24 +105,16 @@ jobs:
           source = candidates[0]
           required = [
               'Makefile', 'control', 'OBSBridge.plist', 'SystemHooks.mm',
-              'CaptureClockIPC.h', 'CaptureClockIPC.mm', 'core/CaptureClockFeedback.hpp', 'core/CaptureClockWire.hpp', 'core/CaptureClockMailbox.hpp',
-              'core/FFmpegAudioTimeline.hpp', 'core/CaptureClockedAudio.hpp', 'core/PreparedCapturePCM.hpp',
-              'core/CaptureOutputWorker.hpp', 'core/CommonPresentationClock.hpp', 'core/HostPCMRead.hpp', 'scripts/run_new_audio_tests.sh',
-              'tests/capture_clock_tests.cpp', 'tests/capture_wire_tests.cpp', 'tests/common_clock_tests.cpp',
-              'tests/ffmpeg_timeline_tests.cpp', 'tests/prepared_capture_tests.cpp', 'tests/full_audio_pipeline_tests.cpp', 'tests/test_host_build.py', 'core/RtmpReconnect.hpp', 'tests/rtmp_reconnect_tests.cpp', 'tests/test_repush_contract.py',
               'AppAudio.mm', 'OBSBridgeLive.plist', 'LiveAudioStatus.h', 'LiveAudioStatus.mm',
-              'core/LiveAudio.hpp', 'core/AudioContinuity.hpp', 'core/AudioReadClock.hpp', 'core/VideoBudget.hpp', 'core/VideoCopy.hpp',
-              'tests/live_audio_tests.cpp', 'tests/audio_continuity_tests.cpp', 'tests/audio_read_clock_tests.cpp', 'tests/video_budget_tests.cpp',
+              'core/LiveAudio.hpp', 'core/VideoSchedule.hpp', 'core/VideoCopy.hpp',
+              'tests/live_audio_tests.cpp', 'tests/source_video_tests.cpp', 'tests/MappedFixture.hpp', 'scripts/run_host_tests.py',
               'layout/Library/libSandy/local.xiaoguai.obsbridge.live-read.plist',
               'Receiver.mm', 'Receiver.h', 'Shared.h',
-              'core/RtmpPull.hpp', 'core/VideoTransform.hpp', 'tests/video_transform_tests.cpp',
-              'controlapp/main.mm', 'controlapp/Makefile', 'controlapp/Info.plist', 'layout/DEBIAN/postinst',
-              'layout/Library/libSandy/local.xiaoguai.obsbridge.control-read.plist',
               'Shortcut.mm', 'Client.h', 'Client.m', 'OBSBridgeSB.plist',
               'Producer.mm', 'Consumer.mm', 'MediaBus.h', 'MediaBus.mm',
               'core/SharedMedia.hpp', 'tests/shared_media_tests.cpp',
           'core/NonblockingRead.hpp', 'core/MappingStatus.hpp', 'tests/nonblocking_read_tests.cpp',
-          'core/MappedMedia.hpp', 'core/PendingFrames.hpp', 'core/PresentationClock.hpp', 'tests/mapped_media_tests.cpp', 'tests/pending_frames_tests.cpp',
+          'core/MappedMedia.hpp', 'core/PendingFrames.hpp', 'tests/mapped_media_tests.cpp', 'tests/pending_frames_tests.cpp',
           'SandboxAccess.mm', 'SandboxAccess.h', 'core/AccessAttempt.hpp', 'tests/access_attempt_tests.cpp',
           'layout/Library/libSandy/local.xiaoguai.obsbridge.media-read.plist',
               'core/VideoContinuity.hpp', 'tests/video_continuity_tests.cpp',
@@ -142,12 +134,12 @@ jobs:
               for name in missing:
                   print(f'::error::Missing source file: {name}. Re-upload this file keeping its folder path.')
               raise SystemExit(1)
-          if 'Version: 0.3.0' not in (source / 'control').read_text(encoding='utf-8'):
-              print('::error::Source version is not 0.3.0. Upload the new volume-shortcut source.')
+          if 'Version: 0.4.0' not in (source / 'control').read_text(encoding='utf-8'):
+              print('::error::Source version is not 0.4.0. Upload the new volume-shortcut source.')
               raise SystemExit(1)
           # Normalize metadata before host checks and Theos packaging. Git settings
           # or Windows editors may otherwise turn LF back into CRLF.
-          for name in ('control', 'Makefile', 'prefs/Makefile', 'controlapp/Makefile', 'scripts/build_ffmpeg.sh', 'layout/DEBIAN/postinst'):
+          for name in ('control', 'Makefile', 'prefs/Makefile', 'scripts/build_ffmpeg.sh'):
               path = source / name
               raw = path.read_bytes()
               normalized = raw.removeprefix(b'\xef\xbb\xbf').replace(b'\r\n', b'\n').replace(b'\r', b'\n')
@@ -156,7 +148,6 @@ jobs:
               if normalized != raw:
                   path.write_bytes(normalized)
                   print('Normalized Unix LF:', name)
-          os.chmod(source / 'layout/DEBIAN/postinst', 0o755)
           directory = source.relative_to(root).as_posix()
           print('Source directory:', directory)
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
@@ -165,57 +156,7 @@ jobs:
       - name: Host audio core tests
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: |
-          mkdir -p work
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            core/Timeline.cpp tests/timeline_tests.cpp -o work/timeline_tests
-          work/timeline_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/shortcut_tests.cpp -o work/shortcut_tests
-          work/shortcut_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            core/Timeline.cpp tests/shared_media_tests.cpp -o work/shared_media_tests
-          work/shared_media_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/nonblocking_read_tests.cpp -o work/nonblocking_read_tests
-          work/nonblocking_read_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/pending_frames_tests.cpp -o work/pending_frames_tests
-          work/pending_frames_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/mapped_media_tests.cpp -o work/mapped_media_tests
-          work/mapped_media_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/access_attempt_tests.cpp -o work/access_attempt_tests
-          work/access_attempt_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/video_continuity_tests.cpp -o work/video_continuity_tests
-          work/video_continuity_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/native_audio_tests.cpp -o work/native_audio_tests
-          work/native_audio_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/audio_list_contract_tests.cpp -o work/audio_list_contract_tests
-          work/audio_list_contract_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/live_audio_tests.cpp -o work/live_audio_tests
-          work/live_audio_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/audio_continuity_tests.cpp -o work/audio_continuity_tests
-          work/audio_continuity_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/audio_read_clock_tests.cpp -o work/audio_read_clock_tests
-          work/audio_read_clock_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/video_budget_tests.cpp -o work/video_budget_tests
-          work/video_budget_tests
-          xcrun clang++ -std=c++17 -Wall -Wextra -Werror -O2 \
-            tests/video_transform_tests.cpp -o work/video_transform_tests
-          work/video_transform_tests
-          python3 tests/check_project.py
-          python3 -m unittest discover -s tests -p test_deb_checker.py -v
-          python3 -m unittest discover -s tests -p test_packaging.py -v
-          python3 -m unittest discover -s tests -p test_host_build.py -v
-          python3 -m unittest discover -s tests -p test_repush_contract.py -v
+          python3 scripts/run_host_tests.py
       - name: CoreMedia audio sample tests
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: |
@@ -251,9 +192,6 @@ jobs:
       - name: Build FFmpeg decoding libraries
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: bash scripts/build_ffmpeg.sh
-      - name: Pinned FFmpeg 7.1.5 new audio pipeline tests
-        working-directory: ${{ steps.layout.outputs.source_dir }}
-        run: bash scripts/run_new_audio_tests.sh
       - name: Compile rootless package
         working-directory: ${{ steps.layout.outputs.source_dir }}
         run: |
@@ -261,7 +199,6 @@ jobs:
             TARGET=iphone:clang:16.5:15.0
           test -n "$(find packages -name '*.deb' -print -quit)"
           python3 tests/check_deb.py packages/*.deb
-          python3 scripts/name_package.py packages
           {
             echo "Theos: $THEOS_COMMIT"
             echo "SDKs: $SDKS_COMMIT; iPhoneOS16.5 SDK, deployment 15.0"
@@ -280,25 +217,22 @@ jobs:
           cp THIRD_PARTY.md vendor/ffmpeg/share/licenses/* packages/
       - uses: actions/upload-artifact@v4
         with:
-          name: tk推流助手-rootless-deb
+          name: tk-TCP-rootless-deb
           path: ${{ steps.layout.outputs.source_dir }}/packages/*.deb
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: OBSBridge-build-materials
+          name: tk-TCP-build-materials
           path: ${{ steps.layout.outputs.source_dir }}/packages/
           if-no-files-found: error
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: OBSBridge-build-diagnostics
+          name: tk-TCP-build-diagnostics
           path: |
             ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-build-*/ffbuild/config.log
             ${{ steps.layout.outputs.source_dir }}/.theos/obj/
             ${{ steps.layout.outputs.source_dir }}/work/coremedia-audio-*.log
-            ${{ steps.layout.outputs.source_dir }}/work/*-test.log
-            ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/ffbuild/config.log
-            ${{ steps.layout.outputs.source_dir }}/work/ffmpeg-host-build/compiler-smoke.log
-            ${{ steps.layout.outputs.source_dir }}/packages/*.deb
+            ${{ steps.layout.outputs.source_dir }}/work/host-tests/*.log
           if-no-files-found: ignore
